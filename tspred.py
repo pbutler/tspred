@@ -83,7 +83,9 @@ def main(args):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-q", "--quiet", action="store_false", dest="verbose",
                         help="don't print status messages to stdout")
-    #parser.add_argument("-n", "--nfeatures", default=10, type=int)
+    parser.add_argument("-n", "--nfeatures", default=10, type=int)
+    parser.add_argument("-s", "--nsamples", default=10, type=int)
+    parser.add_argument("-w", "--weird", action="store_true")
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + __version__)
     #parser.add_argument('args', metavar='args', type=str, nargs='*',
@@ -92,12 +94,28 @@ def main(args):
 
     nfeatures = options.nfeatures
 
+    if options.weird:
+        weirdness(options.nfeatures, options.nsamples)
+
     return 0
 
 
-if __name__ == "__main__":
-    import sys
-    sys.exit(main(sys.argv))
+def weirdness(nfeatures, nsamples):
+    from sklearn import linear_model
+    from matplotlib import pyplot as plt
+    test_data = np.random.random((nsamples, nfeatures))
+    test_target = np.sin(np.arange(nsamples) * 3.14 / nsamples)
+    print test_target
+    plt.plot(test_target, label="true")
+    for l in range(0, 3):
+        pts = PredTS(linear_model.LinearRegression(False), lag=l, recency=3)
+        result = pts.predict(test_data, test_target)
+        print
+        print result
+        plt.plot(result, label="l={}".format(l))
+    plt.legend()
+    plt.show()
+
 
 def test_basic():
     from sklearn import linear_model
@@ -110,3 +128,8 @@ def test_basic():
                  verbose=True)
     result = pts.predict(test_data, test_target)
     assert np.sum(pts.clf.coef_ - np.arange(nfeatures) - 1) < 1e-5
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(main(sys.argv))
+
