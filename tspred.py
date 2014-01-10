@@ -13,7 +13,24 @@ __version__ = '0.0.1'
 import numpy as np
 from sklearn import base
 
-class PredTS(base.BaseEstimator, base.TransformerMixin):
+
+def date_range(*args):
+    mindates = [min(x) for x in args]
+    maxdates = [max(x) for x in args]
+    return max(mindates), min(maxdates)
+
+
+def clip_date(df, drange, col=None):
+    if col is None:
+        df = df[df.index >= drange[0]]
+        df = df[df.index <= drange[1]]
+    else:
+        df = df[df[col] >= drange[0]]
+        df = df[df[col] <= drange[1]]
+    return df
+
+
+class PredTS(base.BaseEstimator, base.RegressorMixin):
     """
     Using a regression predictor for each n data points train on the previous
     n-1 and attempt to predict the nth
